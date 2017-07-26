@@ -1,0 +1,27 @@
+name:                test-active
+version:             0.1.0.0
+-- synopsis:
+-- description:
+homepage:            https://github.com/byorgey/test-active#readme
+license:             BSD3
+license-file:        LICENSE
+author:              Brent Yorgey
+maintainer:          byorgey@gmail.com
+copyright:           2017 Brent Yorgey
+category:            Web
+build-type:          Simple
+cabal-version:       >=1.10
+extra-source-files:  README.md
+
+executable pythagoras
+  hs-source-dirs:      src
+  main-is:             Pythagoras.hs
+  default-language:    Haskell2010
+  build-depends:       base >= 4.7 && < 5, containers, diagrams-lib, diagrams-rasterific, palette
+
+executable euclids-orchard
+  hs-source-dirs:      src
+  main-is:             EuclidsOrchard.hs
+  other-modules:       PrimRoots
+  default-language:    Haskell2010
+  build-depends:       base >= 4.7 && < 5, containers, diagrams-lib, diagrams-rasterific, palette, split

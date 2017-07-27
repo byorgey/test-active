@@ -68,18 +68,17 @@ otherSquares
     # fc sqColor
     # centerXY
 
-movie' :: forall a n. (Num n, Ord n) => [Active n F a] -> Active n F a
-movie' scenes = coerce (movie (coerce scenes :: [Active n F (Last a)]))
+movie' :: forall a. [ActF a] -> ActF a
+movie' scenes = coerce (movie (coerce scenes :: [ActF (Last a)]))
 
-delay
-  :: (Monoid a, Semigroup a, Num d, Ord d)
-  => d -> Active d f a -> Active d f a
+-- XXX move these to active library
+
+delay :: (Monoid a, Semigroup a) => Rational -> Active f a -> Active f a
 delay d = (lasting d mempty ->-)
 
-atDurations
-  :: (Monoid a, Semigroup a, Num d, Ord d)
-  => [(d, Active d F a)] -> Active d F a
-atDurations = stack . map (uncurry delay)
+atDurations :: (Monoid a, Semigroup a) => [(Rational, Active F a)] -> Active F a
+atDurations [] = instant mempty
+atDurations ps = stack . map (uncurry delay) $ ps
 
 infixr 0 ==>
 (==>) :: a -> b -> (a,b)
@@ -90,10 +89,8 @@ infixr 0 ==>
 -- itself, each Subdiagram has DownAnnots
 
 keyframe
-  :: ( Additive v, Metric v, Floating n, Ord n, Semigroup m
-     , Real d, Fractional d
-     )
-  => QDiagram b v n m -> QDiagram b v n m -> Active d F (QDiagram b v n m)
+  :: ( Additive v, Metric v, Floating n, Ord n, Semigroup m )
+  => QDiagram b v n m -> QDiagram b v n m -> ActF (QDiagram b v n m)
 keyframe d1 d2 = f <$> ui
   where
     -- pairs :: [(Name, (Subdiagram b v n m, Subdiagram b v n m))]
@@ -105,9 +102,9 @@ keyframe d1 d2 = f <$> ui
         . map (\(n,(s1,s2)) -> getSub s1 # translate (lerp (1 - d') zero (location s2 .-. location s1)))
         $ pairs
       where
-        d' = fromRational . toRational $ d
+        d' = fromRational d
 
-anim :: Active Rational F (Diagram Rasterific)
+anim :: ActF (Diagram Rasterific)
 anim = movie'
   [ always pythagoreanSquare
     <⊓>

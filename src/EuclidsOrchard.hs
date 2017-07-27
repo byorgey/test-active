@@ -1,4 +1,3 @@
-{-# LANGUAGE DataKinds           #-}
 {-# LANGUAGE FlexibleContexts    #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TupleSections       #-}
@@ -15,9 +14,9 @@ import           Diagrams.Prelude
 
 import           PrimRoots
 
-primStars :: Double -> Double -> Diagram B
+primStars :: Rational -> Rational -> Diagram B
 primStars t so =
-  myallprimdots t so
+  myallprimdots (fromRational t) (fromRational so)
     0.5 (map rybColor [0..23]) [1..24]
 
 myallprimdots :: Double -> Double -> Double -> [Colour Double] -> [Int] -> Diagram B
@@ -45,20 +44,23 @@ primdots2 c n = foldMap
   (primroots n)
 
 
-smooth :: Active Rational F Double
-smooth = ui <#> \t -> (-cos (fromRational t * pi) + 1)/2
+cosRamp :: ActF Double
+cosRamp = ui <#> \t -> (-cos (fromRational t * pi) + 1)/2
 
-anim :: Active Rational F (Diagram B)
+ramp :: ActF Rational
+ramp = ui <#> \t -> (((-20 * t + 70) * t - 84) * t + 35) * t^4
+
+anim :: ActF (Diagram B)
 anim =
   movie'
-  [                                 primStars 0 1 # lasting 1
-  , (smooth # stretch 4) <#> \t  -> primStars t 1
-  ,                                 primStars 1 1 # lasting 1
-  , (smooth # stretch 2
-            # backwards) <#> \so -> primStars 1 so
-  ,                                 primStars 1 0 # lasting 1
+  [                                  primStars 0 1 # lasting 1
+  , (ramp # stretch 4) <#> \t  -> primStars t 1
+  ,                                  primStars 1 1 # lasting 1
+  , (ramp # stretch 2
+             # backwards) <#> \so -> primStars 1 so
+  ,                                  primStars 1 0 # lasting 1
 
-  , keyframe (smooth <#> toRational) (primStars 1 0) orchard
+  , keyframe ramp (primStars 1 0) orchard
       # stretch 2
   , orchard # lasting 1
   ]
@@ -67,22 +69,31 @@ anim =
   where
     orchard = allprimdots2 (map rybColor [0..23]) [1..24]
 
+smoothies :: ActF (Diagram B)
+smoothies = stack
+  [ cosRamp  <#> \t -> circle 0.1 # fc black # translateX (2*t - 1)
+  , ramp     <#> \t -> circle 0.1 # fc black # translateX (2*fromRational t - 1) # translateY (-1)
+  ]
+  <⊓>
+  always (square 3 # fc white)
+
 main :: IO ()
-main = uniformGifMain 3 (simulate 30 anim)
+main = uniformGifMain 3 (simulate 30 ((smoothies ->> backwards smoothies) # stretch 2))
+-- main = uniformGifMain 3 (simulate 30 anim)
 -- main = mainWith primStars
 
 ------------------------------------------------------------
 ------------------------------------------------------------
 ------------------------------------------------------------
 
-movie' :: forall a n. (Num n, Ord n) => [Active n F a] -> Active n F a
-movie' scenes = coerce (movie (coerce scenes :: [Active n F (Last a)]))
+movie' :: forall a. [ActF a] -> ActF a
+movie' scenes = coerce (movie (coerce scenes :: [ActF (Last a)]))
 
 keyframe
   :: ( Additive v, Metric v, Floating n, Ord n, Semigroup m
-     , Real d, Fractional d
+     , Real d
      )
-  => (Active d F d) -> QDiagram b v n m -> QDiagram b v n m -> Active d F (QDiagram b v n m)
+  => ActF d -> QDiagram b v n m -> QDiagram b v n m -> ActF (QDiagram b v n m)
 keyframe int d1 d2 = f <$> int
   where
     -- pairs :: [(Name, (Subdiagram b v n m, Subdiagram b v n m))]
@@ -94,4 +105,4 @@ keyframe int d1 d2 = f <$> int
         . map (\(n,(s1,s2)) -> getSub s1 # translate (lerp (1 - d') zero (location s2 .-. location s1)))
         $ pairs
       where
-        d' = fromRational . toRational $ d
+        d' = realToFrac d

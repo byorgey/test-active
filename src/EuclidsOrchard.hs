@@ -64,7 +64,7 @@ anim =
       # stretch 2
   , orchard # lasting 1
   ]
-  <⊓>
+  <∩>
   always (boundingRect (primStars 0 1) # scale 1.3 # fc white # lw none)
   where
     orchard = allprimdots2 (map rybColor [0..23]) [1..24]
@@ -74,12 +74,12 @@ smoothies = stack
   [ cosRamp  <#> \t -> circle 0.1 # fc black # translateX (2*t - 1)
   , ramp     <#> \t -> circle 0.1 # fc black # translateX (2*fromRational t - 1) # translateY (-1)
   ]
-  <⊓>
+  <∩>
   always (square 3 # fc white)
 
 main :: IO ()
-main = uniformGifMain 3 (simulate 30 ((smoothies ->> backwards smoothies) # stretch 2))
--- main = uniformGifMain 3 (simulate 30 anim)
+main = uniformGifMain 3 (samples 30 ((smoothies ->> backwards smoothies) # stretch 2))
+-- main = uniformGifMain 3 (samples 30 anim)
 -- main = mainWith primStars
 
 ------------------------------------------------------------

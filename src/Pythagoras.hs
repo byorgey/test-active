@@ -107,7 +107,7 @@ keyframe d1 d2 = f <$> ui
 anim :: ActF (Diagram Rasterific)
 anim = movie'
   [ always pythagoreanSquare
-    <⊓>
+    <∩>
     ( movie'
       [ const mempty # lasting 2
       , fadeIn                 1
@@ -118,11 +118,11 @@ anim = movie'
       <:*> always (innerSquare # stroke # fc sqColor)
     )
   , always (square 7)
-    <⊓>
+    <∩>
     movie'
     [ kf     # stretch 2
     , always (end kf)
-      <⊓>
+      <∩>
       ( movie'
         [ const mempty # lasting 2
         , fadeIn                 1
@@ -135,13 +135,13 @@ anim = movie'
     , keyframe smallSquares pythagoreanSquare # stretch 2
     ]
   ]
-  <⊓> always (square 8 # fc white)
+  <∩> always (square 8 # fc white)
 
   where
     kf = keyframe pythagoreanSquare smallSquares
 
 main :: IO ()
-main = uniformGifMain 3 (simulate 30 anim)
+main = uniformGifMain 3 (samples 30 anim)
 
 
 -- Need a better story in general for going between paths (which are
